@@ -518,6 +518,10 @@ source ${_privlibdir}/pkg_info.cygpart
 source ${_privlibdir}/pkg_pkg.cygpart
 ###
 
+### __pkg_upload
+source ${_privlibdir}/pkg_upload.cygpart
+###
+
 ### __finish
 source ${_privlibdir}/pkg_cleanup.cygpart
 ###
@@ -737,6 +741,7 @@ declare -r compilelog="${logdir}/${PF}-compile.log";
 declare -r checklog="${logdir}/${PF}-check.log";
 declare -r installlog="${logdir}/${PF}-install.log";
 declare -r pkglog="${logdir}/${PF}-pkg.log";
+declare -r uploadlog="${logdir}/${PF}-upload.log";
 
 if ! defined SRC_URI
 then
@@ -858,6 +863,12 @@ do
 			;;
 		diff|mkdiff|mkpatch)
 			__pkg_diff;
+			_status=$?;
+			;;
+		upload|up)
+			__stage Uploading;
+			__log_init ${uploadlog};
+			(__pkg_upload) 2>&1 | tee -a ${uploadlog};
 			_status=$?;
 			;;
 		clean|finish)
