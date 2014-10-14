@@ -113,7 +113,7 @@ __pkg_upload_by_lftp() {
 			echo "mirror -v -eR ${pn}"
 		done
 
-		echo "put /dev/null -o !roady"
+		echo "put /dev/null -o !ready"
 
 	} | lftp -f/dev/stdin
 }
