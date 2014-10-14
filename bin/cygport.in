@@ -99,6 +99,7 @@ source ${_privlibdir}/syntax.cygpart
 #  * Installing
 #  * Postinstall
 #  * Packaging
+#  * Uploading
 #  * Cygclasses
 #****
 
@@ -291,6 +292,18 @@ unset conf;
 #  is desirable to create multiple binary packages from one source.
 #  cygport makes that very easy, by defining the variables described in this
 #  section.
+#****
+
+#****** Cygport/Uploading
+#  INTRODUCTION
+#  Before you can upload finished packages to cygwin.com, you will need
+#  to request upload privileges and provide your ssh public key.  See
+#  |html <a href="https://sourceware.org/cygwin-apps/package-upload.html">Uploading Packages</a>
+#  to find out how, and to read FAQs about uploading and how to be
+#  notified in case of problems with your uploads.
+#
+#  Once you upload your packages, they should appear in your local Cygwin
+#  mirror within about 12 hours.
 #****
 
 #****** Cygport/Cygclasses
