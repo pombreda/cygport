@@ -296,20 +296,23 @@ unset conf;
 
 #****** Cygport/Uploading
 #  INTRODUCTION
-#  Before you can upload finished packages to cygwin.com, you will need
-#  to request upload privileges and provide your ssh public key.  See
-#  |html <a href="https://sourceware.org/cygwin-apps/package-upload.html">Uploading Packages</a>
-#  to find out how, and to read FAQs about uploading and how to be
-#  notified in case of problems with your uploads.
+#  Once your binary and source packages are built, in order to distribute them
+#  to users you'll need to upload them to the Cygwin package archive.  Before
+#  you can upload packages, you'll need to do the following things:
+#  * Request upload privileges, and provide your ssh public key.  The
+#    |html <a href="https://sourceware.org/cygwin-apps/package-upload.html">Uploading Packages</a>
+#    page tells how to do that, and how to be notified in case of problems with
+#    your uploads.
+#  * Be listed on the
+#    |html <a href="https://cygwin.com/cygwin-pkg-maint">Cygwin package maintainers list</a>
+#    as the maintainer of your packages.  Ask on the cygwin-apps mailing list if
+#    you need help getting listed.
 #
-#  Next, in order for the Cygwin archive script to pick up your packages,
-#  you will need to be officially listed as their maintainer on the
-#  |html <a href="https://cygwin.com/cygwin-pkg-maint">Cygwin package maintainers list</a>.
-#  Ask on the cygwin-apps mailing list if you need help getting listed.
-#
-#  Once the above are done and you upload a set of package files, if there are
-#  no problems, the new files should appear in your local Cygwin mirror within
-#  about 12 hours.
+#  Once those things are done, running
+#  |html <tt>cygport upload</tt> (or <tt>cygport up</tt> or <tt>cygport ci</tt>)
+#  will upload your finished packages to the package archive on cygwin.com.
+#  From there, if everything goes well, the new files should appear on your
+#  local Cygwin mirror within about 12 hours.
 #****
 
 #****** Cygport/Cygclasses
