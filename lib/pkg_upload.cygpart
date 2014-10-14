@@ -25,6 +25,7 @@ __pkg_upload() {
 	local pkg_file;
 	local pn;
 	local -a clients=(lftp);	# List of supported upload clients, most preferred first
+	local -a client_packages=(lftp)	# List of Cygwin packages that provide the clients
 
 	# Check that binary and source package files exist
 	for pn in ${pkg_name[*]}
@@ -49,7 +50,7 @@ __pkg_upload() {
 	done
 	if test -z "$client"
 	then
-		error "No supported upload clients are available in your PATH. Please install one or more of the following programs:${clients[*]/#/\n   }"
+		error "No supported upload clients are available in your PATH. Please install one or more of the following Cygwin packages:${client_packages[*]/#/\n   }"
 	fi
 
 	# Upload
@@ -68,7 +69,8 @@ __pkg_upload() {
 # To add support for a new upload client named NAME:
 #
 # 1) Add NAME to the definition of the "clients" array in __pkg_upload(),
-#    above.
+#    above.  Also add the name of the Cygwin package that provide the client
+#    to the "client_packages" array.
 #
 # 2) Define a function __pkg_upload_by_NAME() below.  The function must:
 #    - Upload the contents of $destdir to the ${CYGWIN_ARCH}/release
