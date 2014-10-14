@@ -21,7 +21,41 @@
 ################################################################################
 
 __pkg_upload() {
-	:
+	local cmd;
+	local pkg_file;
+	local pn;
+
+	# Check that binary and source package files exist
+	for pn in ${pkg_name[*]}
+	do
+		for pkg_file in "${pn}-${PVR}.tar.xz" "${pn}-${PVR}-src.tar.xz"
+		do
+			if [ ! -f "${distdir}/${pn}/${pkg_file}" ]
+			then
+				error "Package file ${pkg_file} doesn't exist. Run \"cygport ${cygportfile} pkg\" to build it."
+			fi
+		done
+	done
+
+	# Upload by lftp
+	cd "${distdir}"
+	{
+		echo "set cmd:fail-exit on"
+		echo "set cmd:interactive on"
+
+		echo "open sftp://cygwin:@cygwin.com"
+		echo "cd ${CYGPORT_ARCH}/release"
+
+		for pn in ${pkg_name[*]}
+		do
+			echo "mirror -v -eR ${pn}"
+		done
+
+		echo "put /dev/null -o !roady"
+
+	} | lftp -f/dev/stdin \
+	|| error "Upload failed"
+
 }
 
 # protect functions
