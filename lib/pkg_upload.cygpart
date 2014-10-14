@@ -24,15 +24,7 @@ __pkg_upload() {
 	local cmd;
 	local pkg_file;
 	local pn;
-
-#****v* Uploading/SSH_KEY
-#  DESCRIPTION
-#  The file name of an ssh private key to use in connecting to cygwin.com.
-#  Obviously this has to match the public key you provided for uploading.
-#  If you have already have your private key loaded into a running ssh-agent(1),
-#  or if the key file has one of the expected file names such as ~/.ssh/id_rsa,
-#  then you probably don't need to set this.
-#****
+	local -a clients=(lftp);	# List of supported upload clients, most preferred first
 
 	# Check that binary and source package files exist
 	for pn in ${pkg_name[*]}
@@ -46,14 +38,69 @@ __pkg_upload() {
 		done
 	done
 
-	# Upload by lftp
+	# Determine which upload client to use
+	for c in ${clients[*]}
+	do
+		if which $c >&- 2>&-
+		then
+			client=$c
+			break
+		fi
+	done
+	if test -z "$client"
+	then
+		error "No supported upload clients are available in your PATH. Please install one or more of the following programs:${clients[*]/#/\n   }"
+	fi
+
+	# Upload
 	cd "${distdir}"
+	eval __pkg_upload_by_${client} || error "Upload failed"
+
+}
+
+################################################################################
+#
+# Upload functions
+#
+################################################################################
+
+#
+# To add support for a new upload client named NAME:
+#
+# 1) Add NAME to the definition of the "clients" array in __pkg_upload(),
+#    above.
+#
+# 2) Define a function __pkg_upload_by_NAME() below.  The function must:
+#    - Upload the contents of $destdir to the ${CYGWIN_ARCH}/release
+#      directory at cygwin.com.
+#    - Use $SSH_KEY as the ssh private key file in connecting to cygwin.com,
+#      if $SSH_KEY is set.
+#    - Create a file !ready in ${CYGWIN_ARCH}/release, if the upload succeeded.
+#    - Return status 0 if the upload succeeded, non-zero if it failed.
+#    When an upload function runs, the current directory will always be $destdir.
+#
+# 3) Add __pkg_upload_by_NAME to the "readonly" line at the bottom of this file.
+#
+
+#****v* Uploading/SSH_KEY
+#  DESCRIPTION
+#  The file name of an ssh private key to use in connecting to cygwin.com.
+#  Obviously this has to match the public key you provided for uploading.
+#  If you already have your private key loaded into a running ssh-agent(1),
+#  or if the key file has one of the expected file names such as ~/.ssh/id_rsa,
+#  then you probably don't need to set this.
+#****
+
+#
+# lftp
+#
+__pkg_upload_by_lftp() {
 	{
 		echo "set cmd:fail-exit on"
 		echo "set cmd:interactive on"
 		echo "set net:max-retries 1"
 
-		if [ "$SSH_KEY" ]
+		if test -n "$SSH_KEY"
 		then
 			echo "set sftp:connect-program ssh -a -x -i '${SSH_KEY}'"
 		fi
@@ -68,10 +115,9 @@ __pkg_upload() {
 
 		echo "put /dev/null -o !roady"
 
-	} | lftp -f/dev/stdin \
-	|| error "Upload failed"
-
+	} | lftp -f/dev/stdin
 }
 
+
 # protect functions
-readonly -f __pkg_upload
+readonly -f __pkg_upload __pkg_upload_by_lftp
