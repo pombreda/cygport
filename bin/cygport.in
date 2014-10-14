@@ -302,8 +302,14 @@ unset conf;
 #  to find out how, and to read FAQs about uploading and how to be
 #  notified in case of problems with your uploads.
 #
-#  Once you upload your packages, they should appear in your local Cygwin
-#  mirror within about 12 hours.
+#  Next, in order for the Cygwin archive script to pick up your packages,
+#  you will need to be officially listed as their maintainer on the
+#  |html <a href="https://cygwin.com/cygwin-pkg-maint">Cygwin package maintainers list</a>.
+#  Ask on the cygwin-apps mailing list if you need help getting listed.
+#
+#  Once the above are done and you upload a set of package files, if there are
+#  no problems, the new files should appear in your local Cygwin mirror within
+#  about 12 hours.
 #****
 
 #****** Cygport/Cygclasses
