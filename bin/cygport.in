@@ -887,7 +887,7 @@ do
 			__pkg_diff;
 			_status=$?;
 			;;
-		upload|up)
+		upload|up|ci)
 			__stage Uploading;
 			__log_init ${uploadlog};
 			(__pkg_upload) 2>&1 | tee -a ${uploadlog};
