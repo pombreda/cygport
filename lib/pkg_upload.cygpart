@@ -24,6 +24,7 @@ __pkg_upload() {
 	local cmd
 	local pkg_file
 	local pn
+	local remotedir
 	local -a clients=(lftp sftp)	# List of supported upload clients, most preferred first
 	local -a client_packages=(lftp openssh)	# List of Cygwin packages that provide the clients
 
