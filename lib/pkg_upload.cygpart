@@ -21,10 +21,10 @@
 ################################################################################
 
 __pkg_upload() {
-	local cmd;
-	local pkg_file;
-	local pn;
-	local -a clients=(lftp sftp);	# List of supported upload clients, most preferred first
+	local cmd
+	local pkg_file
+	local pn
+	local -a clients=(lftp sftp)	# List of supported upload clients, most preferred first
 	local -a client_packages=(lftp openssh)	# List of Cygwin packages that provide the clients
 
 	# Check that binary and source package files exist
@@ -55,6 +55,12 @@ __pkg_upload() {
 
 	# Upload
 	cd "${distdir}"
+
+	case $CYGPORT_ARCH in
+		i686)	remotedir=x86/release ;;
+		x86_64)	remotedir=x86_64/release ;;
+	esac
+
 	eval __pkg_upload_by_${client} || error "Upload failed"
 	echo "Upload complete."
 
@@ -98,7 +104,9 @@ __pkg_upload() {
 # lftp
 #
 __pkg_upload_by_lftp() {
+
 	__step "Running lftp sftp://cygwin:@cygwin.com"
+
 	{
 		echo "set cmd:fail-exit on"
 		echo "set cmd:interactive on"
@@ -110,7 +118,7 @@ __pkg_upload_by_lftp() {
 		fi
 
 		echo "open sftp://cygwin:@cygwin.com"
-		echo "cd ${CYGPORT_ARCH}/release"
+		echo "cd ${remotedir}"
 		echo "rm -f !ready || echo -n"
 
 		for pn in ${pkg_name[*]}
@@ -138,8 +146,9 @@ __pkg_upload_by_sftp() {
 	fi
 
 	touch $empty_file
+
 	{
-		echo "cd ${CYGPORT_ARCH}/release"
+		echo "cd ${remotedir}"
 		echo "-rm !ready"
 
 		for pn in ${pkg_name[*]}
