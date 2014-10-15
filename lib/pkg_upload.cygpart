@@ -24,8 +24,8 @@ __pkg_upload() {
 	local cmd;
 	local pkg_file;
 	local pn;
-	local -a clients=(lftp);	# List of supported upload clients, most preferred first
-	local -a client_packages=(lftp)	# List of Cygwin packages that provide the clients
+	local -a clients=(lftp sftp);	# List of supported upload clients, most preferred first
+	local -a client_packages=(lftp openssh)	# List of Cygwin packages that provide the clients
 
 	# Check that binary and source package files exist
 	for pn in ${pkg_name[*]}
@@ -56,6 +56,7 @@ __pkg_upload() {
 	# Upload
 	cd "${distdir}"
 	eval __pkg_upload_by_${client} || error "Upload failed"
+	echo "Upload complete."
 
 }
 
@@ -97,6 +98,7 @@ __pkg_upload() {
 # lftp
 #
 __pkg_upload_by_lftp() {
+	__step "Running lftp sftp://cygwin:@cygwin.com"
 	{
 		echo "set cmd:fail-exit on"
 		echo "set cmd:interactive on"
@@ -109,6 +111,7 @@ __pkg_upload_by_lftp() {
 
 		echo "open sftp://cygwin:@cygwin.com"
 		echo "cd ${CYGPORT_ARCH}/release"
+		echo "rm -f !ready || echo -n"
 
 		for pn in ${pkg_name[*]}
 		do
@@ -120,6 +123,38 @@ __pkg_upload_by_lftp() {
 	} | lftp -f/dev/stdin
 }
 
+#
+# sftp
+#
+__pkg_upload_by_sftp() {
+	local empty_file=${TMPDIR:-/tmp}/empty
+	local -a sftp_args=()
+
+	__step "Running sftp cygwin@cygwin.com"
+
+	if test -n "$SSH_KEY"
+	then
+		sftp_args+=('-i' "$SSH_KEY")
+	fi
+
+	touch $empty_file
+	{
+		echo "cd ${CYGPORT_ARCH}/release"
+		echo "-rm !ready"
+
+		for pn in ${pkg_name[*]}
+		do
+			echo "-rm ${pn}/*/* ${pn}/*"
+			echo "-rmdir ${pn}/* ${pn}"
+			echo "put -r ${pn}"
+		done
+
+		echo "put $empty_file !ready"
+
+	} | sftp -r -b- "${sftp_args[@]}" "cygwin@cygwin.com"
+
+	rm $empty_file
+}
 
 # protect functions
-readonly -f __pkg_upload __pkg_upload_by_lftp
+readonly -f __pkg_upload __pkg_upload_by_lftp __pkg_upload_by_sftp
