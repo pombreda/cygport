@@ -22,7 +22,8 @@
 
 __pkg_upload() {
 	local cmd
-	local pkg_file
+	local file
+	local -a pkg_files
 	local pn
 	local remotedir
 	local -a clients=(lftp sftp)	# List of supported upload clients, most preferred first
@@ -31,11 +32,18 @@ __pkg_upload() {
 	# Check that binary and source package files exist
 	for pn in ${pkg_name[*]}
 	do
-		for pkg_file in "${pn}-${PVR}.tar.xz" "${pn}-${PVR}-src.tar.xz"
+		if [ "$pn" = "$NAME" ]
+		then
+			pkg_files=("${distdir}/${NAME}/${pn}-${PVR}.tar.xz" "${distdir}/${NAME}/${pn}-${PVR}-src.tar.xz")
+		else
+			pkg_files=("${distdir}/${NAME}/${pn}/${pn}-${PVR}.tar.xz")
+		fi
+
+		for file in "${pkg_files[@]}"
 		do
-			if [ ! -f "${distdir}/${pn}/${pkg_file}" ]
+			if [ ! -f "${file}" ]
 			then
-				error "Package file ${pkg_file} doesn't exist. Run \"cygport ${cygportfile} pkg\" to build it."
+				error "Package file ${file} doesn't exist. Run \"cygport ${cygportfile} pkg\" to build it."
 			fi
 		done
 	done
@@ -122,10 +130,7 @@ __pkg_upload_by_lftp() {
 		echo "cd ${remotedir}"
 		echo "rm -f !ready || echo -n"
 
-		for pn in ${pkg_name[*]}
-		do
-			echo "mirror -v -eR ${pn}"
-		done
+		echo "mirror -v -eR ${NAME}"
 
 		echo "put /dev/null -o !ready"
 
@@ -152,12 +157,10 @@ __pkg_upload_by_sftp() {
 		echo "cd ${remotedir}"
 		echo "-rm !ready"
 
-		for pn in ${pkg_name[*]}
-		do
-			echo "-rm ${pn}/*/* ${pn}/*"
-			echo "-rmdir ${pn}/* ${pn}"
-			echo "put -r ${pn}"
-		done
+		echo "-rm ${NAME}/*/* ${NAME}/*"
+		echo "-rmdir ${NAME}/* ${NAME}"
+
+		echo "put -r ${NAME}"
 
 		echo "put $empty_file !ready"
 
