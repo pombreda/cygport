@@ -198,6 +198,7 @@ addition to the packages own dependencies:
     gawk
     grep
     gzip
+    lftp
     libtool
     lndir
     make

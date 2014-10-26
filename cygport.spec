@@ -28,6 +28,7 @@ Requires:       file
 Requires:       gawk
 Requires:       grep
 Requires:       imake
+Requires:       lftp
 Requires:       make
 Requires:       patch
 Requires:       rsync

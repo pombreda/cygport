@@ -26,17 +26,17 @@ __pkg_upload() {
 	local -a pkg_files
 	local pn
 	local remotedir
-	local -a clients=(lftp sftp)	# List of supported upload clients, most preferred first
-	local -a client_packages=(lftp openssh)	# List of Cygwin packages that provide the clients
+
+	cd "${distdir}"
 
 	# Check that binary and source package files exist
 	for pn in ${pkg_name[*]}
 	do
 		if [ "$pn" = "$NAME" ]
 		then
-			pkg_files=("${distdir}/${NAME}/${pn}-${PVR}.tar.xz" "${distdir}/${NAME}/${pn}-${PVR}-src.tar.xz")
+			pkg_files=("${NAME}/${pn}-${PVR}.tar.xz" "${NAME}/${pn}-${PVR}-src.tar.xz")
 		else
-			pkg_files=("${distdir}/${NAME}/${pn}/${pn}-${PVR}.tar.xz")
+			pkg_files=("${NAME}/${pn}/${pn}-${PVR}.tar.xz")
 		fi
 
 		for file in "${pkg_files[@]}"
@@ -48,71 +48,13 @@ __pkg_upload() {
 		done
 	done
 
-	# Determine which upload client to use
-	for c in ${clients[*]}
-	do
-		if which $c >&- 2>&-
-		then
-			client=$c
-			break
-		fi
-	done
-	if test -z "$client"
-	then
-		error "No supported upload clients are available in your PATH. Please install one or more of the following Cygwin packages:${client_packages[*]/#/\n   }"
-	fi
-
 	# Upload
-	cd "${distdir}"
 
 	case $CYGPORT_ARCH in
 		i686)	remotedir=x86/release ;;
 		x86_64)	remotedir=x86_64/release ;;
+		*)  error "Don't know where to upload packages with architecture $CYGPORT_ARCH" ;;
 	esac
-
-	eval __pkg_upload_by_${client} || error "Upload failed"
-	echo "Upload complete."
-
-}
-
-################################################################################
-#
-# Upload functions
-#
-################################################################################
-
-#
-# To add support for a new upload client named NAME:
-#
-# 1) Add NAME to the definition of the "clients" array in __pkg_upload(),
-#    above.  Also add the name of the Cygwin package that provide the client
-#    to the "client_packages" array.
-#
-# 2) Define a function __pkg_upload_by_NAME() below.  The function must:
-#    - Upload the contents of $destdir to the ${CYGWIN_ARCH}/release
-#      directory at cygwin.com.
-#    - Use $SSH_KEY as the ssh private key file in connecting to cygwin.com,
-#      if $SSH_KEY is set.
-#    - Create a file !ready in ${CYGWIN_ARCH}/release, if the upload succeeded.
-#    - Return status 0 if the upload succeeded, non-zero if it failed.
-#    When an upload function runs, the current directory will always be $destdir.
-#
-# 3) Add __pkg_upload_by_NAME to the "readonly" line at the bottom of this file.
-#
-
-#****v* Uploading/SSH_KEY
-#  DESCRIPTION
-#  The file name of an ssh private key to use in connecting to cygwin.com.
-#  Obviously this has to match the public key you provided for uploading.
-#  If you already have your private key loaded into a running ssh-agent(1),
-#  or if the key file has one of the expected file names such as ~/.ssh/id_rsa,
-#  then you probably don't need to set this.
-#****
-
-#
-# lftp
-#
-__pkg_upload_by_lftp() {
 
 	__step "Running lftp sftp://cygwin:@cygwin.com"
 
@@ -134,40 +76,10 @@ __pkg_upload_by_lftp() {
 
 		echo "put /dev/null -o !ready"
 
-	} | lftp -f/dev/stdin
-}
+	} | lftp -f/dev/stdin || error "Upload failed"
 
-#
-# sftp
-#
-__pkg_upload_by_sftp() {
-	local empty_file=${TMPDIR:-/tmp}/empty
-	local -a sftp_args=()
-
-	__step "Running sftp cygwin@cygwin.com"
-
-	if test -n "$SSH_KEY"
-	then
-		sftp_args+=('-i' "$SSH_KEY")
-	fi
-
-	touch $empty_file
-
-	{
-		echo "cd ${remotedir}"
-		echo "-rm !ready"
-
-		echo "-rm ${NAME}/*/* ${NAME}/*"
-		echo "-rmdir ${NAME}/* ${NAME}"
-
-		echo "put -r ${NAME}"
-
-		echo "put $empty_file !ready"
-
-	} | sftp -r -b- "${sftp_args[@]}" "cygwin@cygwin.com"
-
-	rm $empty_file
+	echo "Upload complete."
 }
 
 # protect functions
-readonly -f __pkg_upload __pkg_upload_by_lftp __pkg_upload_by_sftp
+readonly -f __pkg_upload
