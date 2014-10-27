@@ -21,7 +21,6 @@
 ################################################################################
 
 __pkg_upload() {
-	local cmd
 	local file
 	local -a pkg_files
 	local pn
