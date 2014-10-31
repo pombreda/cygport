@@ -81,7 +81,7 @@ __pkg_upload() {
 
 	} | lftp -f/dev/stdin || error "Upload failed"
 
-	echo "Upload complete."
+	__step "Upload complete."
 }
 
 # protect functions
