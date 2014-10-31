@@ -21,10 +21,11 @@
 ################################################################################
 
 __pkg_upload() {
+	local archdir
+	local dir
 	local file
 	local -a pkg_files
 	local pn
-	local remotedir
 
 	cd "${distdir}"
 
@@ -50,8 +51,9 @@ __pkg_upload() {
 	# Upload
 
 	case $CYGPORT_ARCH in
-		i686)	remotedir=x86/release ;;
-		x86_64)	remotedir=x86_64/release ;;
+		i686)	archdir=(x86) ;;
+		x86_64)	archdir=(x86_64) ;;
+		noarch) archdir=(x86 x86_64) ;;
 		*)  error "Don't know where to upload packages with architecture $CYGPORT_ARCH" ;;
 	esac
 
@@ -68,12 +70,14 @@ __pkg_upload() {
 		fi
 
 		echo "open sftp://cygwin:@cygwin.com"
-		echo "cd ${remotedir}"
-		echo "rm -f !ready || echo -n"
 
-		echo "mirror -v -eR ${NAME}"
-
-		echo "put /dev/null -o !ready"
+		for dir in ${archdir[*]}
+		do
+			echo "cd /${dir}/release"
+			echo "rm -f !ready || echo -n"
+			echo "mirror -v -eR ${NAME}"
+			echo "put /dev/null -o !ready"
+		done
 
 	} | lftp -f/dev/stdin || error "Upload failed"
 
