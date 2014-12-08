@@ -83,9 +83,9 @@ __pkg_upload() {
 		for dir in ${archdir[*]}
 		do
 			echo "cd /${dir}/release"
-			echo "rm -f !ready || echo -n"
+			echo "rm -f ${NAME}/!ready || echo -n"
 			echo "mirror -v -eR ${NAME}"
-			echo "put /dev/null -o !ready"
+			echo "put /dev/null -o ${NAME}/!ready"
 		done
 
 	) || error "Upload failed"
