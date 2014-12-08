@@ -309,7 +309,7 @@ unset conf;
 #    you need help getting listed.
 #
 #  Once those things are done, running
-#  |html <tt>cygport upload</tt> (or <tt>cygport up</tt> or <tt>cygport ci</tt>)
+#  |html <tt>cygport upload</tt> (or <tt>cygport up</tt> for short)
 #  will upload your finished packages to the package archive on cygwin.com.
 #  From there, if everything goes well, the new files should appear on your
 #  local Cygwin mirror within about 12 hours.
@@ -887,7 +887,7 @@ do
 			__pkg_diff;
 			_status=$?;
 			;;
-		upload|up|ci)
+		upload|up)
 			__stage Uploading;
 			__log_init ${uploadlog};
 			(__pkg_upload) 2>&1 | tee -a ${uploadlog};
