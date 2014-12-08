@@ -20,6 +20,14 @@
 #
 ################################################################################
 
+#****v* Uploading/SSH_KEY
+#  DESCRIPTION
+#  Path to the SSH private key corresponding to the public key registered
+#  for uploading on sourceware. If you already have your private key loaded
+#  into a running ssh-agent(1), or if the key file has one of the expected
+#  file names such as ~/.ssh/id_rsa, then you probably don't need to set this.
+#****
+
 __pkg_upload() {
 	local archdir
 	local dir
