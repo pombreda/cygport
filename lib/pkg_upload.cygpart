@@ -50,11 +50,11 @@ __pkg_upload() {
 
 	# Upload
 
-	case $CYGPORT_ARCH in
+	case ${ARCH} in
 		i686)	archdir=(x86) ;;
 		x86_64)	archdir=(x86_64) ;;
 		noarch) archdir=(x86 x86_64) ;;
-		*)  error "Don't know where to upload packages with architecture $CYGPORT_ARCH" ;;
+		*)  error "Don't know where to upload packages with architecture ${ARCH}" ;;
 	esac
 
 	__step "Running lftp sftp://cygwin:@cygwin.com"
