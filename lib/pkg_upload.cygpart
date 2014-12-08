@@ -67,7 +67,8 @@ __pkg_upload() {
 
 	__step "Running lftp sftp://cygwin:@cygwin.com"
 
-	{
+	lftp -f <(
+
 		echo "set cmd:fail-exit on"
 		echo "set cmd:interactive on"
 		echo "set net:max-retries 1"
@@ -87,7 +88,7 @@ __pkg_upload() {
 			echo "put /dev/null -o !ready"
 		done
 
-	} | lftp -f/dev/stdin || error "Upload failed"
+	) || error "Upload failed"
 
 	echo "Upload complete."
 }
