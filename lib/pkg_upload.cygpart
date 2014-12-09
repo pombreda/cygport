@@ -26,6 +26,9 @@
 #  for uploading on sourceware. If you already have your private key loaded
 #  into a running ssh-agent(1), or if the key file has one of the expected
 #  file names such as ~/.ssh/id_rsa, then you probably don't need to set this.
+#  Note that for now it doesn't work to supply an encrypted SSH key with SFTP.
+#  You'll have to provide either an ssh-agent with your key already loaded, or
+#  a path to an unencrypted key in SSH_KEY.
 #****
 
 __pkg_upload() {
