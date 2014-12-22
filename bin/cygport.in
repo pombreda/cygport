@@ -109,8 +109,8 @@ source ${_privlibdir}/syntax.cygpart
 #  REQUIRES
 #  The following packages are required to build packages with cygport:
 #   autoconf, automake, bash, binutils, bzip2, coreutils, diffstat, diffutils,
-#   dos2unix, file, gawk, grep, gzip, lftp, libtool, lndir, make, patch, rsync,
-#   sed, tar, unzip, util-linux, wget, which, xz.
+#   dos2unix, file, gawk, grep, gzip, lftp, libtool, lndir, make, openssh,
+#   patch, rsync, sed, tar, unzip, util-linux, wget, which, xz.
 #  Other software packages are required by some Cygclasses, as indicated within.
 #****
 

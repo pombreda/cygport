@@ -30,6 +30,7 @@ Requires:       grep
 Requires:       imake
 Requires:       lftp
 Requires:       make
+Requires:       openssh
 Requires:       patch
 Requires:       rsync
 Requires:       shared-mime-info
