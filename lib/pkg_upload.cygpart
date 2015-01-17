@@ -23,24 +23,29 @@
 #****v* Uploading/SSH_KEY
 #  DESCRIPTION
 #  Path to the SSH private key corresponding to the public key registered
-#  for uploading on sourceware. If you already have your private key loaded
-#  into a running ssh-agent(1), or if the key file has one of the expected
-#  file names such as ~/.ssh/id_rsa, then you probably don't need to set this.
-#  Note that for now it doesn't work to supply an encrypted SSH key with SFTP.
-#  You'll have to provide either an ssh-agent with your key already loaded, or
-#  a path to an unencrypted key in SSH_KEY.
+#  for uploading on sourceware. You'll need to set this if your private key
+#  isn't already loaded into a running ssh-agent(1), and it doesn't have one
+#  of the expected file names such as ~/.ssh/id_rsa. Also, setting this
+#  allows cygport to determine if a passphrase is needed to unlock the key,
+#  and only prompt you for a passphrase if it's needed. Otherwise, you'll
+#  be prompted for a passphrase every time you upload.
 #****
 
 __pkg_upload() {
 	local archdir
+	local connect_string
 	local dir
 	local file
+	local key_fingerprint
 	local -a pkg_files
 	local pn
+	local ssh_agent_started
+	local ssh_key_loaded
 
 	cd "${distdir}"
 
 	# Check that binary and source package files exist
+
 	for pn in ${pkg_name[*]}
 	do
 		if [ "$pn" = "$NAME" ]
@@ -59,6 +64,60 @@ __pkg_upload() {
 		done
 	done
 
+	# If the SSH key is known, load it into an ssh-agent.
+	# The purpose of this is to get any password prompting out of the way
+	# before we run batch upload commands.
+
+	if test -z "$SSH_KEY"
+	then
+
+		# SSH key isn't known.
+		# So allow lftp to prompt for a passphrase every time, in case it's needed.
+		connect_string='sftp://cygwin@cygwin.com'
+
+	else
+
+		# SSH key is known, so load it into an ssh-agent.
+
+		# Password prompting if any will be done when the key is loaded into the ssh-agent,
+		# so tell lftp not to prompt.
+		connect_string='sftp://cygwin:@cygwin.com'
+
+		if ssh-add -l >/dev/null 2>/dev/null
+		then
+
+			# ssh-agent is already running.
+
+			# Get key fingerprint:
+			key_fingerprint=$(ssh-keygen -l -f "$SSH_KEY" | egrep -o '[0-9a-f]{2}(:[0-9a-f]{2}){15}') \
+			|| error "Can't read key fingerprint of ${SSH_KEY}. Not a private key file, or corresponding public key file is missing?"
+
+			# Load key into ssh-agent, if it's not already loaded (prompts for passphrase):
+			if ! ssh-add -l | grep -q "${key_fingerprint}"
+			then
+				ssh-add "${SSH_KEY}" 2>/dev/null \
+				|| error "Couldn't load private key ${SSH_KEY}."
+				ssh_key_loaded=1
+			fi
+
+		else
+
+			# ssh-agent isn't running.
+
+			# Start one:
+			eval $(ssh-agent -s) >/dev/null \
+			|| error "Couldn't start ssh-agent."
+			ssh_agent_started=1
+
+			# Load the private key into it (prompts for passphrase):
+			ssh-add  "${SSH_KEY}" 2>/dev/null \
+			|| {
+				eval $(ssh-agent -k) >/dev/null
+				error "Couldn't load private key ${SSH_KEY}."
+			}
+		fi
+	fi
+
 	# Upload
 
 	case ${ARCH} in
@@ -68,7 +127,7 @@ __pkg_upload() {
 		*)  error "Don't know where to upload packages with architecture ${ARCH}" ;;
 	esac
 
-	__step "Running lftp sftp://cygwin:@cygwin.com"
+	__step "Running lftp ${connect_string}"
 
 	lftp -f <(
 
@@ -76,12 +135,7 @@ __pkg_upload() {
 		echo "set cmd:interactive on"
 		echo "set net:max-retries 1"
 
-		if test -n "$SSH_KEY"
-		then
-			echo "set sftp:connect-program ssh -a -x -i '${SSH_KEY}'"
-		fi
-
-		echo "open sftp://cygwin:@cygwin.com"
+		echo "open ${connect_string}"
 
 		for dir in ${archdir[*]}
 		do
@@ -94,6 +148,18 @@ __pkg_upload() {
 	) || error "Upload failed"
 
 	echo "Upload complete."
+
+	# Unload private key, if loaded above
+
+	if test -n "$ssh_agent_started"
+	then
+		# Kill ssh-agent that we started
+		eval $(ssh-agent -k) >/dev/null
+	elif test -n "$ssh_key_loaded"
+	then
+		# Unload key that we loaded
+		ssh-add -d "${SSH_KEY}" 2>/dev/null
+	fi
 }
 
 # protect functions
