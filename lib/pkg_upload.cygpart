@@ -39,8 +39,6 @@ __pkg_upload() {
 	local key_fingerprint
 	local -a pkg_files
 	local pn
-	local ssh_agent_started
-	local ssh_key_loaded
 
 	cd "${distdir}"
 
@@ -97,7 +95,8 @@ __pkg_upload() {
 			then
 				ssh-add "${SSH_KEY}" 2>/dev/null \
 				|| error "Couldn't load private key ${SSH_KEY}."
-				ssh_key_loaded=1
+				# Unload key on exit:
+				trap "ssh-add -d ${SSH_KEY} 2>/dev/null" EXIT
 			fi
 
 		else
@@ -107,14 +106,12 @@ __pkg_upload() {
 			# Start one:
 			eval $(ssh-agent -s) >/dev/null \
 			|| error "Couldn't start ssh-agent."
-			ssh_agent_started=1
+			# Kill it again on exit:
+			trap 'eval $(ssh-agent -k) >/dev/null' EXIT
 
 			# Load the private key into it (prompts for passphrase):
 			ssh-add  "${SSH_KEY}" 2>/dev/null \
-			|| {
-				eval $(ssh-agent -k) >/dev/null
-				error "Couldn't load private key ${SSH_KEY}."
-			}
+			|| error "Couldn't load private key ${SSH_KEY}."
 		fi
 	fi
 
@@ -148,18 +145,6 @@ __pkg_upload() {
 	) || error "Upload failed"
 
 	echo "Upload complete."
-
-	# Unload private key, if loaded above
-
-	if test -n "$ssh_agent_started"
-	then
-		# Kill ssh-agent that we started
-		eval $(ssh-agent -k) >/dev/null
-	elif test -n "$ssh_key_loaded"
-	then
-		# Unload key that we loaded
-		ssh-add -d "${SSH_KEY}" 2>/dev/null
-	fi
 }
 
 # protect functions
