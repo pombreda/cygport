@@ -26,7 +26,7 @@
 #  for uploading on sourceware. You'll need to set this if your private key
 #  isn't already loaded into a running ssh-agent(1), and it doesn't have one
 #  of the expected file names such as ~/.ssh/id_rsa. Also, setting this
-#  allows cygport to determine if a passphrase is needed to unlock the key,
+#  allows cygport to determine if a passphrase is needed to decrypt the key,
 #  and only prompt you for a passphrase if it's needed. Otherwise, you'll
 #  be prompted for a passphrase every time you upload.
 #****
@@ -70,7 +70,7 @@ __pkg_upload() {
 	then
 
 		# SSH key isn't known.
-		# So allow lftp to prompt for a passphrase every time, in case it's needed.
+		# So let lftp prompt for a passphrase every time, in case it's needed.
 		connect_string='sftp://cygwin@cygwin.com'
 
 	else
@@ -104,8 +104,7 @@ __pkg_upload() {
 			# ssh-agent isn't running.
 
 			# Start one:
-			eval $(ssh-agent -s) >/dev/null \
-			|| error "Couldn't start ssh-agent."
+			eval $(ssh-agent -s) >/dev/null || error "Couldn't start ssh-agent."
 			# Kill it again on exit:
 			trap 'eval $(ssh-agent -k) >/dev/null' EXIT
 
